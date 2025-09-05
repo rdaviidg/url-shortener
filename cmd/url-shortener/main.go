@@ -9,6 +9,7 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 
 	"github.com/rdaviidg/url-shortener/internal/config"
+	"github.com/rdaviidg/url-shortener/internal/http-server/handlers/redirect"
 	"github.com/rdaviidg/url-shortener/internal/http-server/handlers/url/save"
 	mwLogger "github.com/rdaviidg/url-shortener/internal/http-server/middleware/logger"
 	"github.com/rdaviidg/url-shortener/internal/lib/logger/handlers/slogpretty"
@@ -31,7 +32,11 @@ func main() {
 	// init logger: slog
 	log := setupLogger(cfg.Env)
 
-	log.Info("starting url-shortener", slog.String("env", cfg.Env))
+	log.Info(
+		"starting url-shortener",
+		slog.String("env", cfg.Env),
+		slog.String("version", "0.0.1"),
+	)
 	log.Debug("debug messages are enabled")
 
 	// init storage: sqlite
@@ -53,6 +58,7 @@ func main() {
 	router.Use(middleware.URLFormat)
 
 	router.Post("/url", save.New(log, storage))
+	router.Get("/{alias}", redirect.New(log, storage))
 
 	// create and run server
 	log.Info("starting server", slog.String("address", cfg.Address))
